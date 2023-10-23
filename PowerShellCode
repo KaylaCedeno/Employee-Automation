@@ -1,0 +1,99 @@
+Install-Module -Name AzureAD
+
+Install-Module -Name ImportExcel
+
+ 
+
+>> Connect-AzureAD
+
+>>
+
+>> $excelFilePath = "C:\Users\KaylaNCedeno\Downloads\newCopy_offboarding.xlsx"
+
+>>
+
+>> $excelData = Import-Excel -Path $excelFilePath
+
+>>
+
+>> $endDateThreshold = Get-Date "8/11/23" -Format "MM/dd/yyyy"
+
+>>
+
+ 
+
+# for every column in the excel sheet
+
+>> foreach ($column in $excelData) {
+
+ 
+
+# created two variables specifically for the columns: Account and EndDate
+
+>>     $name = $column.Account
+
+>>     $endDateValue = $column.EndDate
+
+>>
+
+ 
+
+# if the end date fits the [DateTime] format, then save that to a variable as that format
+
+>>     if ($endDateValue -as [DateTime]) {
+
+>>         $endDate = [DateTime]$endDateValue
+
+ 
+
+# if any of these formatted end dates are before "8/11/23"
+
+>>         if ($endDate -le $endDateThreshold) {
+
+>>             try {
+
+ 
+
+# remove their account from Azure and print the string following the deleted account/s
+
+>>                 Remove-AzureADUser -ObjectId $name -Force
+
+>>                 Write-Host "Deleted Azure AD user: $name."
+
+>>             } catch {
+
+ 
+
+# if there is an error deleting any account that fits the criteria, then print this string + account
+
+>>                 Write-Host "Error deleting user $name : $_"
+
+>>             }
+
+ 
+
+# for any accounts whose end date is not before the given date, print this string + account
+
+>>         } else {
+
+>>             Write-Host "End date not before the threshold for $name."
+
+>>         }
+
+>>     } else {
+
+ 
+
+# this else statement is on the outer most level of the if/else, basically it's checking every part of the code under the loop, not just the try/catch or inner if statements
+
+>>         Write-Host "Invalid or empty EndDate value for $name."
+
+>>     }
+
+>> }
+
+>>
+
+# Disconnect from Azure AD
+
+>> Disconnect-AzureAD
